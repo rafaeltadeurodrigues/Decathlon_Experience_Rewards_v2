@@ -44,7 +44,14 @@ function card(r) {
 }
 
 async function render() {
-  user = await db.auth.getUser().catch(() => null);
+  try {
+    user = await db.auth.getUser();
+  } catch (err) {
+    console.error(err);
+    user = null;
+    root.innerHTML = `${header()}<h1>Painel de moderação</h1><div class="notice warning" role="alert">${e(friendlyError(err))}</div><button class="btn" data-action="retry">Tentar novamente</button> <button class="btn secondary" data-action="logout">Sair da conta</button>`;
+    return;
+  }
   if (!user) return loginView();
   if (user.role !== 'admin') {
     root.innerHTML = `${header()}<h1>Acesso restrito</h1><div class="notice warning">${icon('shield')}<span>Sua conta não tem permissão de moderação. Peça a um administrador do projeto para liberar o acesso.</span></div>`;

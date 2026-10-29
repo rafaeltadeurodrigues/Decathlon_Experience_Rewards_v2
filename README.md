@@ -59,11 +59,23 @@ Abra o endereço que aparecer (ex.: `http://localhost:5173`). Sem configurar nad
    ```
 5. Rode `npm run dev` de novo. O rodapé da tela **Minha conta** mostra "dados no Supabase".
 6. Em **Authentication → URL Configuration**, coloque o endereço do site em **Site URL** (e em **Redirect URLs** os endereços de teste, ex.: `http://localhost:5173/**`).
-7. Cadastre no app a conta que vai moderar e rode no SQL Editor:
+7. Cadastre no app a conta que vai moderar, confirme o e-mail caso exigido e confira no SQL Editor se a conta e o perfil existem (substitua o e-mail):
    ```sql
-   update public.profiles set role = 'admin'
-    where id = (select id from auth.users where email = 'seu-email@exemplo.com');
+   select u.id, u.email, p.first_name, p.role
+   from auth.users u left join public.profiles p on p.id = u.id
+   where u.email = 'seu-email@exemplo.com';
    ```
+   Se não houver resultado, confira o projeto Supabase e o e-mail usados no cadastro. Se `role` estiver nulo, o perfil não foi criado: confira se a migração e o trigger foram instalados antes do cadastro. O trigger cria perfis apenas para novos usuários; contas anteriores à migração precisam de um perfil criado por alguém com acesso administrativo ao banco.
+8. Depois de confirmar a conta e o perfil, atribua o papel no SQL Editor:
+   ```sql
+   update public.profiles p set role = 'admin'
+    from auth.users u
+    where p.id = u.id and u.email = 'seu-email@exemplo.com'
+    returning p.id, p.role;
+   ```
+   A consulta deve retornar uma linha com `role = admin`. Uma atualização de zero linhas não concede acesso. Saia e entre novamente em `admin.html` para carregar o papel atualizado.
+
+O administrador local descrito acima existe apenas no navegador e não cria uma conta no Supabase. O painel usa uma sessão separada do aplicativo, portanto é necessário entrar também no painel.
 
 Observação: por padrão o Supabase pede confirmação de e-mail no cadastro. Para testes rápidos, desative em **Authentication → Providers → Email → Confirm email**.
 
@@ -74,7 +86,9 @@ Nunca coloque a chave `service_role` no frontend nem no `.env.local`. A chave `a
 1. Suba a pasta para um repositório no GitHub.
 2. Na Vercel (ou Netlify), importe o repositório. Build: `npm run build`; pasta de saída: `dist`.
 3. Em **Environment Variables**, cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-4. Depois do deploy, coloque a URL final em **Site URL** no Supabase (passo 6 acima).
+4. Confira se `VITE_DATA_MODE` não está definido como `local` e gere um novo deploy: o Vite incorpora as variáveis durante o build. Depois, coloque a URL final em **Site URL** no Supabase (passo 6 acima).
+
+Se o site disser “dados salvos neste navegador”, ele está em modo local. Confira as variáveis no ambiente correspondente ao deploy e gere novamente o build. Para investigar erros de cadastro ou acesso, consulte também os registros do Auth e do banco no projeto Supabase; não compartilhe senhas nem chaves secretas.
 
 ## Segurança aplicada no banco
 

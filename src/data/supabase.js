@@ -34,12 +34,13 @@ async function withMedia(rows) {
 
 let profileCache = null;
 async function getUser() {
-  const { data: { session } } = await sb.auth.getSession();
+  const { session } = check(await sb.auth.getSession());
   const u = session?.user;
   if (!u) { profileCache = null; return null; }
   if (profileCache?.id === u.id) return profileCache;
-  const { data: p } = await sb.from('profiles').select('first_name, role').eq('id', u.id).maybeSingle();
-  profileCache = { id: u.id, email: u.email, firstName: p?.first_name || u.user_metadata?.first_name || 'Você', role: p?.role || 'user' };
+  const p = check(await sb.from('profiles').select('first_name, role').eq('id', u.id).maybeSingle());
+  if (!p) throw new Error('profile-not-found');
+  profileCache = { id: u.id, email: u.email, firstName: p.first_name, role: p.role };
   return profileCache;
 }
 async function requireUser() { const u = await getUser(); if (!u) throw new Error('not_authenticated'); return u; }

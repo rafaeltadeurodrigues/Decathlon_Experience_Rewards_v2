@@ -56,6 +56,7 @@ export function friendlyError(err) {
   if (/password should be at least|weak-password/i.test(m)) return 'A senha precisa ter pelo menos 8 caracteres.';
   if (/rate limit|too many/i.test(m)) return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.';
   if (/failed to fetch|network/i.test(m)) return 'Sem conexão com o servidor. Verifique sua internet e tente novamente.';
+  if (/profile-not-found/i.test(m)) return 'O perfil desta conta não foi encontrado. Peça à equipe responsável pelo projeto para verificar o cadastro.';
   if (/not_authorized|42501|permission/i.test(m)) return 'Você não tem permissão para esta ação.';
   if (/review_not_pending/i.test(m)) return 'Esta avaliação já foi moderada.';
   if (/payload too large|exceeded the maximum/i.test(m)) return 'O arquivo é maior do que o permitido.';

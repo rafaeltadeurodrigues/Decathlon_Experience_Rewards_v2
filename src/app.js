@@ -401,7 +401,8 @@ db.subscribe(async () => {
 
 db.auth.onChange(async event => {
   const before = user?.id;
-  user = await db.auth.getUser();
+  try { user = await db.auth.getUser(); }
+  catch (err) { console.error(err); toast(friendlyError(err)); return; }
   if (event === 'PASSWORD_RECOVERY') { nav('nova-senha', null, { replace: true }); return; }
   if (before !== user?.id && !FORM_SCREENS.includes(screen())) { knownCredits = null; if (user) await loadWallet().catch(() => {}); render(); }
 });
